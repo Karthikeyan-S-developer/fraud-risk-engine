@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 min-h-screen overflow-x-hidden;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Pulsing warning glow for high risk */
+@keyframes pulse-risk {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(244, 63, 94, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(244, 63, 94, 0.65);
+  }
+}
+
+.pulse-high-risk {
+  animation: pulse-risk 2.2s infinite ease-in-out;
+}
+
+/* Leaflet dark theme map overrides */
+.leaflet-container {
+  background-color: #0b1120 !important;
+  font-family: inherit;
+}
+
+.leaflet-tile {
+  filter: brightness(0.65) invert(1) contrast(3.5) hue-rotate(200deg) saturate(0.35);
+}

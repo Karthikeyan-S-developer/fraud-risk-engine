@@ -1,0 +1,5 @@
+{
+  "commands": [
+    "systemctl restart acentra-backend.service"
+  ]
+}

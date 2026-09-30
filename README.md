@@ -111,11 +111,45 @@ Open `http://localhost:5173` in your browser.
 
 ---
 
-## 🧪 Deterministic Fraud Scenarios
+## ☁️ Live AWS Cloud Deployment
 
-The simulator includes one-click scenario injection:
-1. **Impossible Travel**: Chennai at 10:00 AM $\rightarrow$ London at 10:31 AM (6,700 km in 31m, implied speed $12,968\text{ km/h}$).
-2. **Velocity Burst**: 6 rapid transactions in 2 minutes for single account.
-3. **Amount Spike**: $\$15,850.00$ charge ($113\times$ user baseline average).
-4. **Shared Syndicate Ring**: Shared Android device and Springfield shipping address linking multiple accounts.
-5. **Critical Multi-Vector Attack**: Teleport + high amount + syndicate device (triggers aggregate score $95+/100$ and AWS SNS alert).
+The entire platform is deployed and fully operational on AWS infrastructure in the `ap-south-1` (Mumbai) region:
+
+| Component | Cloud Infrastructure | Endpoint / Resource |
+| :--- | :--- | :--- |
+| **Frontend Cockpit** | AWS S3 Static Website Hosting | [Live S3 Cockpit](http://acentra-fraud-cockpit-605411278941.s3-website.ap-south-1.amazonaws.com) |
+| **Backend Engine** | AWS EC2 (`t3.small`, Systemd, Amazon Linux 2023) | `http://13.126.41.84:8000` |
+| **Health Check** | AWS EC2 / FastAPI Health Endpoint | `http://13.126.41.84:8000/health` |
+| **Real-Time Alerts** | AWS SNS Topic | `arn:aws:sns:ap-south-1:605411278941:FraudHighRiskAlerts` |
+| **Database** | Serverless Neon PostgreSQL (SSL Encrypted) | AWS US-East-2 Pooler |
+| **IAM Security** | EC2 Instance Profile (`AcentraEC2InstanceProfile`) | Seamless IMDS credential discovery |
+
+---
+
+## 🗺️ Leaflet Spatial Entity Graph
+
+The investigation cockpit features a dual-mode interactive Leaflet map:
+1. **Flight Path Mode**: Visualizes the geodesic arc between the previous transaction coordinate and the flagged transaction coordinate, reporting distance ($km$), elapsed time ($min$), and implied aircraft speed vs commercial aviation limits ($900\text{ km/h}$).
+2. **Spatial Entity Graph Mode**: Renders heterogeneous financial entities directly onto the geospatial map:
+   - 🏠 **User Home Base**
+   - 💳 **Flagged Transaction Geolocation**
+   - 📦 **Shipping Destination**
+   - ⚠️ **Linked Syndicate Members / Associated Fraud Locations**
+   - Curved geodesic arcs and dashed syndicate polylines linking entities with popup metadata inspection.
+
+---
+
+## 🚦 Understanding & Resolving `PENDING` Status
+
+When a transaction is flagged with risk score $\ge 30$, it enters the compliance queue with a status of `PENDING`, signifying that it is awaiting human-in-the-loop review.
+
+### Resolution Options:
+1. **One-Click Row Quick Action**:
+   - `[✓ Clear]`: Instantly marks the transaction as `CLEARED` and appends an audit record.
+   - `[✕ Fraud]`: Instantly marks the transaction as `CONFIRMED_FRAUD` and freezes downstream assets.
+2. **Batch Multi-Select Review**: Select multiple checkboxes and resolve them in bulk using the bottom multi-action bar.
+3. **Auto-Triage Rule Engine (`POST /flags/auto-triage`)**:
+   - Flags with scores $\ge 70$ are automatically resolved as `CONFIRMED_FRAUD`.
+   - Flags with scores $< 70$ are resolved as `CLEARED`.
+4. **Deep Cockpit Inspection**: Click into any transaction row to inspect rule breakdown scores, SHAP local attributions, and the 2D Force-Directed Graph before issuing a signed decision.
+

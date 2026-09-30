@@ -1,11 +1,14 @@
 import os
 import uuid
+import json
+import asyncio
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
@@ -27,6 +30,21 @@ from backend.simulator.simulator import simulator, CITIES
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+# Global SSE client queue registry for real-time streaming
+_sse_clients: List[asyncio.Queue] = []
+
+async def broadcast_sse_event(event_data: dict):
+    """Broadcast a new event to all connected SSE clients."""
+    dead = []
+    for q in _sse_clients:
+        try:
+            q.put_nowait(event_data)
+        except asyncio.QueueFull:
+            dead.append(q)
+    for q in dead:
+        if q in _sse_clients:
+            _sse_clients.remove(q)
 
 def seed_demo_users_and_rebuild_graph(db: Session):
     """
@@ -276,19 +294,29 @@ def evaluate_and_save_transaction(txn_data: dict, db: Session) -> Dict[str, Any]
             }
         )
 
-    return {
+    result = {
         "flag_id": flag.flag_id,
         "txn_id": txn_id,
         "total_score": total_score,
         "ml_anomaly_score": ml_score,
         "risk_level": risk_level,
         "status": flag.status,
+        "amount": txn_data["amount"],
+        "merchant": txn_data.get("merchant"),
+        "city": txn_data.get("city"),
+        "user_id": user_id,
+        "timestamp": timestamp.isoformat(),
         "reasons": [
             {"rule_name": r.rule_name, "score": r.score, "reason": r.reason, "evidence": r.evidence}
             for r in rule_eval["results"]
         ],
         "shap_attributions": shap_vals
     }
+
+    # 9. Broadcast to SSE live stream clients
+    asyncio.create_task(broadcast_sse_event(result))
+
+    return result
 
 # ==================== REST API ENDPOINTS ====================
 
@@ -636,3 +664,79 @@ def health_check():
         "service": "Fraud Detection Platform API",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
+
+# ==================== REAL-TIME SSE LIVE STREAM ====================
+
+@app.get("/stream/live")
+async def live_transaction_stream():
+    """
+    Server-Sent Events (SSE) endpoint for real-time transaction feed.
+    Each connected client gets its own queue. Events are pushed as they
+    are processed by evaluate_and_save_transaction. Yields:
+      - heartbeat every 5s (keep-alive ping)
+      - transaction event with full scoring result
+    """
+    client_queue: asyncio.Queue = asyncio.Queue(maxsize=100)
+    _sse_clients.append(client_queue)
+
+    async def event_generator() -> AsyncGenerator[str, None]:
+        # Send initial connection confirmation
+        yield f"data: {json.dumps({'type': 'connected', 'message': 'Live stream connected', 'timestamp': datetime.now(timezone.utc).isoformat()})}\n\n"
+        
+        try:
+            while True:
+                try:
+                    # Wait for a new event, but yield heartbeat every 5s if idle
+                    event = await asyncio.wait_for(client_queue.get(), timeout=5.0)
+                    payload = json.dumps({"type": "transaction", "data": event, "default": str}, default=str)
+                    yield f"data: {payload}\n\n"
+                except asyncio.TimeoutError:
+                    # Heartbeat to keep connection alive
+                    yield f"data: {json.dumps({'type': 'heartbeat', 'timestamp': datetime.now(timezone.utc).isoformat()})}\n\n"
+        except Exception:
+            pass
+        finally:
+            if client_queue in _sse_clients:
+                _sse_clients.remove(client_queue)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*"
+        }
+    )
+
+@app.get("/stream/recent")
+def get_recent_transactions(limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
+    """
+    Returns most recent scored transactions for initial dashboard load
+    before SSE stream kicks in.
+    """
+    flags = (
+        db.query(FraudFlag)
+        .join(Transaction)
+        .order_by(desc(FraudFlag.created_at))
+        .limit(limit)
+        .all()
+    )
+    results = []
+    for f in flags:
+        txn = f.transaction
+        results.append({
+            "flag_id": f.flag_id,
+            "txn_id": f.txn_id,
+            "total_score": f.total_score,
+            "ml_anomaly_score": f.ml_anomaly_score,
+            "risk_level": f.risk_level,
+            "status": f.status,
+            "amount": txn.amount if txn else None,
+            "merchant": txn.merchant if txn else None,
+            "city": txn.city if txn else None,
+            "user_id": txn.user_id if txn else None,
+            "timestamp": f.created_at.isoformat() if f.created_at else None
+        })
+    return results

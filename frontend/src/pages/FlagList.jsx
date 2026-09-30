@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShieldAlert, Search, Filter, RefreshCw, ArrowRight, CheckCircle2, 
-  XCircle, AlertOctagon, HelpCircle, CheckSquare, Square, Zap, ShieldCheck
+  ShieldAlert, Search, RefreshCw, ArrowRight, CheckCircle2, 
+  XCircle, AlertOctagon, HelpCircle, Zap, ShieldCheck
 } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
@@ -107,7 +107,7 @@ export default function FlagList({ onSelectFlag }) {
         const data = await res.json();
         setActionNotice({
           type: 'success',
-          text: `Auto-Triaged ${data.total_triaged} transactions! (${data.confirmed_fraud} Confirmed Fraud, ${data.cleared} Cleared)`
+          text: `Auto-Triaged ${data.total_triaged} transactions! (${data.confirmed_fraud} Fraud, ${data.cleared} Cleared)`
         });
         fetchFlags();
       }
@@ -147,30 +147,29 @@ export default function FlagList({ onSelectFlag }) {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Educational Banner: Why Pending? */}
-      <div className="bg-sky-950/30 border border-sky-800/60 p-4 rounded-xl flex items-start gap-3 text-xs">
-        <HelpCircle className="w-5 h-5 text-sky-400 flex-shrink-0 mt-0.5" />
+    <div className="space-y-5">
+      {/* Informational Queue Header */}
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg flex items-start gap-3 text-xs">
+        <HelpCircle className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1 text-slate-300 space-y-1">
-          <div className="font-bold text-sky-300">
-            Why do transactions have a "PENDING" status?
+          <div className="font-semibold text-slate-200">
+            Compliance Investigation Queue
           </div>
           <p className="text-slate-400">
-            In this fraud platform, transactions that trigger rule policies (Score ≥ 30) enter the investigation queue as <b className="text-sky-300 font-mono">PENDING</b> awaiting human-in-the-loop compliance review.
-            You can resolve them individually with the quick <span className="text-emerald-400 font-bold">Clear</span> and <span className="text-rose-400 font-bold">Fraud</span> buttons below, or use <b className="text-amber-300">Auto-Triage All</b> to instantly resolve the entire backlog.
+            Transactions with policy risk scores (Score ≥ 30) enter as <span className="font-mono text-sky-400 font-semibold">PENDING</span> for reviewer confirmation. Use quick buttons to resolve items or click <span className="text-white font-semibold">Inspect</span> for full spatio-temporal and graph telemetry.
           </p>
         </div>
       </div>
 
       {/* Header & Controls */}
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-slate-900 border border-slate-800 p-4 rounded-lg space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
-              <ShieldAlert className="w-6 h-6 text-rose-400" />
+            <h1 className="text-lg font-bold text-white flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-rose-400" />
               Flagged Transactions Queue
             </h1>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-400 mt-0.5">
               Deterministic rule violations and suspicious entity linkages requiring reviewer action
             </p>
           </div>
@@ -179,28 +178,27 @@ export default function FlagList({ onSelectFlag }) {
             <button
               disabled={isProcessing}
               onClick={handleAutoTriageAll}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/40 text-amber-300 text-xs font-bold transition shadow"
-              title="Automatically confirm high risk (≥70) and clear low risk (<70)"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold transition"
             >
               <Zap className="w-3.5 h-3.5 text-amber-400" />
-              Auto-Triage All Pending
+              Auto-Triage Pending
             </button>
 
             <button
               onClick={fetchFlags}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold transition"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh Queue
+              Refresh
             </button>
           </div>
         </div>
 
         {actionNotice && (
-          <div className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+          <div className={`p-2.5 rounded text-xs font-medium flex items-center gap-2 ${
             actionNotice.type === 'success' 
-              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-              : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+              ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+              : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
           }`}>
             <ShieldCheck className="w-4 h-4" />
             <span>{actionNotice.text}</span>
@@ -208,16 +206,16 @@ export default function FlagList({ onSelectFlag }) {
         )}
 
         {/* Filter Toolbar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
           {/* Search Input */}
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search Txn ID, User, City..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
             />
           </div>
 
@@ -226,7 +224,7 @@ export default function FlagList({ onSelectFlag }) {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
             >
               <option value="ALL">All Statuses</option>
               <option value="PENDING">Pending Review</option>
@@ -241,7 +239,7 @@ export default function FlagList({ onSelectFlag }) {
             <select
               value={riskFilter}
               onChange={(e) => setRiskFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-sky-500"
             >
               <option value="ALL">All Risk Levels</option>
               <option value="HIGH">HIGH (70 - 100)</option>
@@ -251,7 +249,7 @@ export default function FlagList({ onSelectFlag }) {
           </div>
 
           {/* Min Score Filter */}
-          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-xs">
             <span className="text-slate-400 whitespace-nowrap">Min Score:</span>
             <input
               type="range"
@@ -268,9 +266,9 @@ export default function FlagList({ onSelectFlag }) {
 
         {/* Batch Actions Bar (when checkboxes selected) */}
         {selectedIds.size > 0 && (
-          <div className="bg-slate-950 border border-slate-700 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 animate-fade-in">
+          <div className="bg-slate-950 border border-slate-700 p-2.5 rounded flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs font-semibold text-slate-300 flex items-center gap-2">
-              <span className="bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded-full font-mono font-bold">
+              <span className="bg-sky-500/20 text-sky-400 px-2 py-0.5 rounded font-mono font-bold">
                 {selectedIds.size}
               </span>
               transactions selected
@@ -279,39 +277,39 @@ export default function FlagList({ onSelectFlag }) {
               <button
                 disabled={isProcessing}
                 onClick={() => handleBatchReview("CONFIRMED_FRAUD")}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1"
+                className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-semibold transition flex items-center gap-1"
               >
                 <XCircle className="w-3.5 h-3.5" />
-                Confirm Selected as Fraud
+                Confirm Fraud
               </button>
               <button
                 disabled={isProcessing}
                 onClick={() => handleBatchReview("CLEARED")}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1"
+                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold transition flex items-center gap-1"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                Clear Selected Flags
+                Clear Flags
               </button>
               <button
                 disabled={isProcessing}
                 onClick={() => handleBatchReview("ESCALATED")}
-                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1"
+                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-semibold transition flex items-center gap-1"
               >
                 <AlertOctagon className="w-3.5 h-3.5" />
-                Escalate Selected
+                Escalate
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Flagged Transactions Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+      {/* Flagged Transactions Data Table */}
+      <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider font-mono text-[11px] border-b border-slate-800">
+            <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider font-mono text-[10px] border-b border-slate-800">
               <tr>
-                <th className="py-3.5 px-4 w-10">
+                <th className="py-2.5 px-3 w-8">
                   <input
                     type="checkbox"
                     checked={filteredFlags.length > 0 && selectedIds.size === filteredFlags.length}
@@ -319,14 +317,14 @@ export default function FlagList({ onSelectFlag }) {
                     className="accent-sky-500 cursor-pointer rounded"
                   />
                 </th>
-                <th className="py-3.5 px-4">Transaction ID</th>
-                <th className="py-3.5 px-4">User / City</th>
-                <th className="py-3.5 px-4">Amount</th>
-                <th className="py-3.5 px-4">Rule Score</th>
-                <th className="py-3.5 px-4">ML Anomaly</th>
-                <th className="py-3.5 px-4">Violations</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Quick Triage & Cockpit</th>
+                <th className="py-2.5 px-3">Transaction ID</th>
+                <th className="py-2.5 px-3">User / City</th>
+                <th className="py-2.5 px-3">Amount</th>
+                <th className="py-2.5 px-3">Score</th>
+                <th className="py-2.5 px-3">ML Anomaly</th>
+                <th className="py-2.5 px-3">Rules Fired</th>
+                <th className="py-2.5 px-3">Status</th>
+                <th className="py-2.5 px-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800 font-mono">
@@ -338,7 +336,7 @@ export default function FlagList({ onSelectFlag }) {
 
                   return (
                     <tr key={flag.flag_id} className={`hover:bg-slate-800/40 transition ${isChecked ? 'bg-sky-950/20' : ''}`}>
-                      <td className="py-3.5 px-4">
+                      <td className="py-2.5 px-3">
                         <input
                           type="checkbox"
                           checked={isChecked}
@@ -346,78 +344,75 @@ export default function FlagList({ onSelectFlag }) {
                           className="accent-sky-500 cursor-pointer rounded"
                         />
                       </td>
-                      <td className="py-3.5 px-4 text-sky-300 font-bold">
+                      <td className="py-2.5 px-3 text-sky-300 font-semibold">
                         {flag.txn_id}
                       </td>
-                      <td className="py-3.5 px-4 font-sans text-slate-300">
+                      <td className="py-2.5 px-3 font-sans text-slate-300">
                         <div>{txn?.user_id || "User"}</div>
                         <div className="text-[10px] text-slate-500">{txn?.city || "Unknown City"}</div>
                       </td>
-                      <td className="py-3.5 px-4 text-white font-bold">
+                      <td className="py-2.5 px-3 text-white font-semibold">
                         ${txn?.amount?.toLocaleString() ?? "—"}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`text-sm font-extrabold ${
+                      <td className="py-2.5 px-3">
+                        <span className={`font-bold ${
                           flag.total_score >= 70 ? 'text-rose-400' : flag.total_score >= 30 ? 'text-amber-400' : 'text-emerald-400'
                         }`}>
                           {flag.total_score}/100
                         </span>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="text-emerald-400 font-bold">
+                      <td className="py-2.5 px-3">
+                        <span className="text-emerald-400 font-semibold">
                           {(flag.ml_anomaly_score * 100).toFixed(1)}%
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-sans">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-semibold">
+                      <td className="py-2.5 px-3 font-sans">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px]">
                           {flag.reasons?.length || 0} Rules
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-sans">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      <td className="py-2.5 px-3 font-sans">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
                           flag.status === 'CONFIRMED_FRAUD' 
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                             : flag.status === 'CLEARED'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : flag.status === 'ESCALATED'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                            : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
                         }`}>
                           {flag.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-sans">
+                      <td className="py-2.5 px-3 text-right font-sans">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Quick Clear Button */}
                           {isPending && (
                             <button
                               disabled={isProcessing}
                               onClick={() => handleQuickDecision(flag.flag_id, "CLEARED")}
-                              className="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-[11px] font-semibold transition"
+                              className="px-2 py-0.5 rounded bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-medium transition"
                               title="Clear Flag"
                             >
                               ✓ Clear
                             </button>
                           )}
 
-                          {/* Quick Confirm Fraud Button */}
                           {isPending && (
                             <button
                               disabled={isProcessing}
                               onClick={() => handleQuickDecision(flag.flag_id, "CONFIRMED_FRAUD")}
-                              className="px-2 py-1 rounded bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 text-[11px] font-semibold transition"
+                              className="px-2 py-0.5 rounded bg-rose-600/10 hover:bg-rose-600/20 text-rose-400 border border-rose-500/30 text-[11px] font-medium transition"
                               title="Confirm Fraud"
                             >
                               ✕ Fraud
                             </button>
                           )}
 
-                          {/* Detailed Cockpit Inspection */}
                           <button
                             onClick={() => onSelectFlag(flag.flag_id)}
-                            className="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition inline-flex items-center gap-1 shadow"
+                            className="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition inline-flex items-center gap-1"
                           >
-                            Inspect <ArrowRight className="w-3.5 h-3.5" />
+                            Inspect <ArrowRight className="w-3 h-3" />
                           </button>
                         </div>
                       </td>
@@ -427,7 +422,7 @@ export default function FlagList({ onSelectFlag }) {
               ) : (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-500 font-sans text-xs">
-                    {loading ? "Loading transactions..." : "No flagged transactions match current search and filter criteria."}
+                    {loading ? "Loading transactions..." : "No flagged transactions match current search criteria."}
                   </td>
                 </tr>
               )}

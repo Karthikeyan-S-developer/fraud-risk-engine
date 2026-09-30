@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle2, XCircle, AlertOctagon, Send, UserCheck, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertOctagon, UserCheck, ShieldCheck } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 
 export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }) {
@@ -37,7 +37,7 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
       const updatedFlag = await res.json();
       setToastMessage({
         type: 'success',
-        text: `Successfully updated flag status to ${decision}`
+        text: `Updated flag status to ${decision}`
       });
       setComment("");
       if (onActionSubmitted) {
@@ -47,7 +47,7 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
       console.error("Action error:", err);
       setToastMessage({
         type: 'error',
-        text: `Failed to record review action: ${err.message}`
+        text: `Failed to record action: ${err.message}`
       });
     } finally {
       setIsSubmitting(false);
@@ -55,32 +55,32 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800 mb-4">
+    <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800 mb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-rose-500/10 text-rose-400">
-            <UserCheck className="w-5 h-5" />
+          <div className="p-1.5 rounded bg-rose-500/10 text-rose-400">
+            <UserCheck className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-100 text-sm sm:text-base">
-              Human-in-the-Loop Review Cockpit
+            <h3 className="font-bold text-slate-100 text-sm">
+              Reviewer Decision Panel
             </h3>
             <p className="text-xs text-slate-400">
-              Submit binding compliance decision with audit logging
+              Submit binding compliance review decision (persisted with audit log)
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 text-xs">
           <span className="text-slate-400">Current Status:</span>
-          <span className={`px-2.5 py-1 rounded-full font-bold uppercase tracking-wider text-[11px] ${
+          <span className={`px-2 py-0.5 rounded font-semibold uppercase tracking-wider text-[10px] ${
             currentStatus === 'CONFIRMED_FRAUD' 
-              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
               : currentStatus === 'CLEARED'
-              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
               : currentStatus === 'ESCALATED'
-              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-              : 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+              : 'bg-sky-500/10 text-sky-400 border border-sky-500/20'
           }`}>
             {currentStatus || "PENDING"}
           </span>
@@ -88,10 +88,10 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
       </div>
 
       {toastMessage && (
-        <div className={`mb-4 p-3 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+        <div className={`mb-3 p-2.5 rounded text-xs font-medium flex items-center gap-2 ${
           toastMessage.type === 'success' 
-            ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-            : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+            ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+            : 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
         }`}>
           <ShieldCheck className="w-4 h-4 flex-shrink-0" />
           <span>{toastMessage.text}</span>
@@ -99,9 +99,9 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
       )}
 
       {/* Reviewer Inputs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
             Reviewer Name / ID
           </label>
           <input
@@ -109,12 +109,12 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
             value={reviewer}
             onChange={(e) => setReviewer(e.target.value)}
             placeholder="e.g. Lead Investigator"
-            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
+            className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
             Audit Trail Comment & Evidence Summary
           </label>
           <input
@@ -122,20 +122,20 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Enter reason for decision (e.g., Confirmed card theft with customer; Impossible travel confirmed)"
-            className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
+            className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
           />
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3 pt-2">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         {/* Confirm Fraud */}
         <button
           disabled={isSubmitting}
           onClick={() => handleDecision("CONFIRMED_FRAUD")}
-          className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:bg-rose-700 text-white font-semibold text-xs transition shadow-lg shadow-rose-950/40 disabled:opacity-50"
+          className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-3 py-2 rounded bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition border border-rose-500/30 disabled:opacity-50"
         >
-          <XCircle className="w-4 h-4" />
+          <XCircle className="w-3.5 h-3.5" />
           Confirm Fraud
         </button>
 
@@ -143,9 +143,9 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
         <button
           disabled={isSubmitting}
           onClick={() => handleDecision("CLEARED")}
-          className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold text-xs transition shadow-lg shadow-emerald-950/40 disabled:opacity-50"
+          className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-3 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition border border-emerald-500/30 disabled:opacity-50"
         >
-          <CheckCircle2 className="w-4 h-4" />
+          <CheckCircle2 className="w-3.5 h-3.5" />
           Clear Flag
         </button>
 
@@ -153,9 +153,9 @@ export default function ActionPanel({ flagId, currentStatus, onActionSubmitted }
         <button
           disabled={isSubmitting}
           onClick={() => handleDecision("ESCALATED")}
-          className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white font-semibold text-xs transition shadow-lg shadow-amber-950/40 disabled:opacity-50"
+          className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-3 py-2 rounded bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition border border-amber-500/30 disabled:opacity-50"
         >
-          <AlertOctagon className="w-4 h-4" />
+          <AlertOctagon className="w-3.5 h-3.5" />
           Escalate Flag
         </button>
       </div>

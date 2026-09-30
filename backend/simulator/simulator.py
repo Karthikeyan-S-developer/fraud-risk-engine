@@ -7,7 +7,7 @@ from faker import Faker
 
 fake = Faker()
 
-# Major financial hub coordinates
+# Major global financial hubs
 CITIES = [
     {"name": "New York", "lat": 40.7128, "lon": -74.0060},
     {"name": "London", "lat": 51.5074, "lon": -0.1278},
@@ -22,15 +22,16 @@ CITIES = [
 ]
 
 MERCHANTS = [
-    "Amazon Web Store", "Apple Store Regent St", "Uber Technologies",
-    "Walmart Global Supercenter", "Starbucks Coffee", "Steam Digital Gaming",
-    "Target Retail Corp", "Delta Air Lines", "Best Buy Electronics", "Nike Flagship"
+    "Amazon Global Store", "Apple Store Regent St", "Uber Technologies",
+    "Walmart Supercenter", "Starbucks Coffee", "Steam Digital Gaming",
+    "Target Retail", "Delta Air Lines", "Best Buy Electronics", "Nike Flagship",
+    "Sephora Beauty", "Nordstrom", "Lululemon", "Sony Interactive", "Airbnb Payments"
 ]
 
 class TransactionSimulator:
     def __init__(self, ingest_callback=None):
         self.is_running = False
-        self.interval = 3.0  # seconds between auto transactions
+        self.interval = 2.5  # seconds between live stream ticks
         self.ingest_callback = ingest_callback
         self.task = None
         self.stats = {
@@ -41,7 +42,7 @@ class TransactionSimulator:
             "started_at": None
         }
 
-        # Preset test entities for deterministic fraud demos
+        # Preset baseline users
         self.demo_users = [
             {"user_id": "usr_alex_chen", "name": "Alex Chen", "home_city": "Chennai", "home_lat": 13.0827, "home_lon": 80.2707, "avg_amount": 85.0},
             {"user_id": "usr_sarah_miller", "name": "Sarah Miller", "home_city": "New York", "home_lat": 40.7128, "home_lon": -74.0060, "avg_amount": 140.0},
@@ -50,7 +51,6 @@ class TransactionSimulator:
             {"user_id": "usr_marcus_vance", "name": "Marcus Vance", "home_city": "San Francisco", "home_lat": 37.7749, "home_lon": -122.4194, "avg_amount": 95.0},
         ]
         
-        # Shared syndicate entities for ring fraud demo
         self.syndicate_device = "dev_rogue_android_x99"
         self.syndicate_address = "742 Evergreen Terrace Suite 4B, Springfield"
 
@@ -61,14 +61,11 @@ class TransactionSimulator:
         user = random.choice(self.demo_users)
         city = next((c for c in CITIES if c["name"] == user["home_city"]), random.choice(CITIES))
         
-        # Jitter coordinates slightly around city center (within ~5 km)
-        lat = city["lat"] + random.uniform(-0.04, 0.04)
-        lon = city["lon"] + random.uniform(-0.04, 0.04)
+        lat = city["lat"] + random.uniform(-0.03, 0.03)
+        lon = city["lon"] + random.uniform(-0.03, 0.03)
         
-        # Normal transaction amount around user's average
-        amount = round(random.uniform(user["avg_amount"] * 0.4, user["avg_amount"] * 1.6), 2)
-        
-        txn_id = f"txn_{uuid.uuid4().hex[:12]}"
+        amount = round(random.uniform(user["avg_amount"] * 0.4, user["avg_amount"] * 1.5), 2)
+        txn_id = f"txn_live_{uuid.uuid4().hex[:10]}"
         now = datetime.now(timezone.utc)
 
         return {
@@ -87,23 +84,117 @@ class TransactionSimulator:
             "user": user
         }
 
+    def generate_random_stream_fraud(self) -> List[Dict[str, Any]]:
+        """
+        Generates fresh dynamic fraud vectors during live stream.
+        """
+        now = datetime.now(timezone.utc)
+        fraud_type = random.choice(["teleport", "amount", "velocity", "ring"])
+        results = []
+
+        if fraud_type == "teleport":
+            # Pick a random user and two distant cities
+            user = random.choice(self.demo_users)
+            city1, city2 = random.sample(CITIES, 2)
+            t1_time = now - timedelta(minutes=random.randint(10, 35))
+            
+            results.append({
+                "txn_id": f"txn_stream_geo1_{uuid.uuid4().hex[:8]}",
+                "user_id": user["user_id"],
+                "amount": round(random.uniform(40, 150), 2),
+                "currency": "USD",
+                "merchant": random.choice(MERCHANTS),
+                "device_id": f"dev_{user['user_id'][:6]}_mobile",
+                "payment_token": f"pmt_{user['user_id'][:6]}_card",
+                "shipping_address": f"12 Main St, {city1['name']}",
+                "city": city1["name"],
+                "latitude": city1["lat"],
+                "longitude": city1["lon"],
+                "timestamp": t1_time,
+                "user": user
+            })
+            results.append({
+                "txn_id": f"txn_stream_geo2_{uuid.uuid4().hex[:8]}",
+                "user_id": user["user_id"],
+                "amount": round(random.uniform(850, 3500), 2),
+                "currency": "USD",
+                "merchant": f"Luxury Boutique {city2['name']}",
+                "device_id": f"dev_{user['user_id'][:6]}_mobile",
+                "payment_token": f"pmt_{user['user_id'][:6]}_card",
+                "shipping_address": f"88 Grand Blvd, {city2['name']}",
+                "city": city2["name"],
+                "latitude": city2["lat"],
+                "longitude": city2["lon"],
+                "timestamp": now,
+                "user": user
+            })
+
+        elif fraud_type == "amount":
+            user = random.choice(self.demo_users)
+            huge_amount = round(user["avg_amount"] * random.uniform(12.0, 45.0), 2)
+            results.append({
+                "txn_id": f"txn_stream_amt_{uuid.uuid4().hex[:8]}",
+                "user_id": user["user_id"],
+                "amount": huge_amount,
+                "currency": "USD",
+                "merchant": "High-Value Diamond Vault",
+                "device_id": f"dev_{user['user_id'][:6]}_pc",
+                "payment_token": f"pmt_{user['user_id'][:6]}_corp",
+                "shipping_address": f"500 Commerce Way, {user['home_city']}",
+                "city": user["home_city"],
+                "latitude": user["home_lat"],
+                "longitude": user["home_lon"],
+                "timestamp": now,
+                "user": user
+            })
+
+        elif fraud_type == "velocity":
+            user = random.choice(self.demo_users)
+            for i in range(random.randint(5, 7)):
+                results.append({
+                    "txn_id": f"txn_stream_vel_{i+1}_{uuid.uuid4().hex[:8]}",
+                    "user_id": user["user_id"],
+                    "amount": round(user["avg_amount"] * random.uniform(0.7, 1.3), 2),
+                    "currency": "USD",
+                    "merchant": f"Fast-Checkout Store #{i+1}",
+                    "device_id": f"dev_{user['user_id'][:6]}_fast",
+                    "payment_token": f"pmt_{user['user_id'][:6]}_token",
+                    "shipping_address": f"45 Express Lane, {user['home_city']}",
+                    "city": user["home_city"],
+                    "latitude": user["home_lat"] + random.uniform(-0.01, 0.01),
+                    "longitude": user["home_lon"] + random.uniform(-0.01, 0.01),
+                    "timestamp": now - timedelta(seconds=(7 - i) * 20),
+                    "user": user
+                })
+
+        elif fraud_type == "ring":
+            selected = random.sample(self.demo_users, 3)
+            shared_device = f"dev_syndicate_{random.randint(100, 999)}"
+            for i, user in enumerate(selected):
+                results.append({
+                    "txn_id": f"txn_stream_ring_{i+1}_{uuid.uuid4().hex[:8]}",
+                    "user_id": user["user_id"],
+                    "amount": round(random.uniform(400, 1200), 2),
+                    "currency": "USD",
+                    "merchant": "Syndicate Electronics Outlet",
+                    "device_id": shared_device,
+                    "payment_token": f"pmt_mule_{uuid.uuid4().hex[:6]}",
+                    "shipping_address": self.syndicate_address,
+                    "city": "Springfield",
+                    "latitude": 39.7817,
+                    "longitude": -89.6501,
+                    "timestamp": now - timedelta(minutes=(3 - i) * 2),
+                    "user": user
+                })
+
+        return results
+
     def generate_scenario(self, scenario_type: str) -> List[Dict[str, Any]]:
-        """
-        Generates deterministic fraud scenario payloads.
-        Supported scenarios:
-        - 'teleport': Impossible Geographical travel (Chennai -> London in 31 minutes, implied speed > 12,000 km/h)
-        - 'velocity': High transaction burst (6 transactions in 2 minutes)
-        - 'amount': Anomalous amount spike (15x user average)
-        - 'ring': Shared device and address syndicate ring
-        - 'combo': Multi-vector critical fraud attack
-        """
         now = datetime.now(timezone.utc)
         results = []
 
         if scenario_type == "teleport":
-            # Target User: Alex Chen (baseline in Chennai)
             user = self.demo_users[0]
-            # Transaction 1: 31 minutes ago in Chennai
             t1_time = now - timedelta(minutes=31)
             t1 = {
                 "txn_id": f"txn_geo_1_{uuid.uuid4().hex[:8]}",
@@ -120,7 +211,6 @@ class TransactionSimulator:
                 "timestamp": t1_time,
                 "user": user
             }
-            # Transaction 2: Right now in London (Distance ~6,700 km, delta 31 min -> speed ~12,968 km/h)
             t2 = {
                 "txn_id": f"txn_geo_2_{uuid.uuid4().hex[:8]}",
                 "user_id": user["user_id"],
@@ -139,9 +229,7 @@ class TransactionSimulator:
             results.extend([t1, t2])
 
         elif scenario_type == "velocity":
-            # Target User: Vikram Patel (London)
             user = self.demo_users[2]
-            # 6 rapid transactions in a 3-minute burst
             for i in range(6):
                 t_time = now - timedelta(seconds=(6 - i) * 25)
                 results.append({
@@ -161,7 +249,6 @@ class TransactionSimulator:
                 })
 
         elif scenario_type == "amount":
-            # Target User: Sarah Miller (avg $140 -> spike to $15,850.00 = 113x)
             user = self.demo_users[1]
             results.append({
                 "txn_id": f"txn_amt_{uuid.uuid4().hex[:8]}",
@@ -180,7 +267,6 @@ class TransactionSimulator:
             })
 
         elif scenario_type == "ring":
-            # Shared syndicate: 3 distinct users using same device and shipping address
             for i, user in enumerate(self.demo_users[:3]):
                 results.append({
                     "txn_id": f"txn_ring_{i+1}_{uuid.uuid4().hex[:8]}",
@@ -199,9 +285,7 @@ class TransactionSimulator:
                 })
 
         elif scenario_type == "combo":
-            # Critical combination: Impossible speed + huge amount + velocity burst
-            user = self.demo_users[3] # Elena
-            # First in Frankfurt 20 minutes ago
+            user = self.demo_users[3]
             results.append({
                 "txn_id": f"txn_combo_1_{uuid.uuid4().hex[:8]}",
                 "user_id": user["user_id"],
@@ -217,7 +301,6 @@ class TransactionSimulator:
                 "timestamp": now - timedelta(minutes=20),
                 "user": user
             })
-            # Second in Tokyo 20 minutes later ($18,400.00, 9,300 km away!)
             results.append({
                 "txn_id": f"txn_combo_2_{uuid.uuid4().hex[:8]}",
                 "user_id": user["user_id"],
@@ -241,24 +324,33 @@ class TransactionSimulator:
     async def _run_loop(self):
         while self.is_running:
             try:
-                txn = self.generate_normal_transaction()
-                self.stats["total_generated"] += 1
-                self.stats["normal_generated"] += 1
+                # 30% chance to stream fresh real-time fraud attack, 70% normal traffic
+                if random.random() < 0.30:
+                    fraud_txns = self.generate_random_stream_fraud()
+                    for t in fraud_txns:
+                        self.stats["total_generated"] += 1
+                        self.stats["fraud_injected"] += 1
+                        if self.ingest_callback:
+                            await self.ingest_callback(t)
+                else:
+                    txn = self.generate_normal_transaction()
+                    self.stats["total_generated"] += 1
+                    self.stats["normal_generated"] += 1
+                    if self.ingest_callback:
+                        await self.ingest_callback(txn)
 
-                if self.ingest_callback:
-                    await self.ingest_callback(txn)
             except Exception as e:
                 print(f"[Simulator] Error in simulation loop: {e}")
 
             await asyncio.sleep(self.interval)
 
-    def start(self, interval: float = 3.0):
+    def start(self, interval: float = 2.5):
         if not self.is_running:
             self.is_running = True
             self.interval = interval
             self.stats["started_at"] = datetime.now(timezone.utc).isoformat()
             self.task = asyncio.create_task(self._run_loop())
-            print(f"[Simulator] Started background traffic stream (interval={interval}s)")
+            print(f"[Simulator] Started dynamic live traffic stream (interval={interval}s)")
 
     def stop(self):
         if self.is_running:

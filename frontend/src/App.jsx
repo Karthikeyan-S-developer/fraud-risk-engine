@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, ShieldAlert, LayoutDashboard, ListFilter, ClipboardCheck, Bell, Zap, Compass, DollarSign, Share2 } from 'lucide-react';
+import { Shield, LayoutDashboard, ListFilter, ClipboardCheck, Server } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import FlagList from './pages/FlagList';
 import FlagDetail from './pages/FlagDetail';
@@ -20,83 +20,79 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-rose-500/30 selection:text-rose-200">
-      {/* Top Main Navigation Bar */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-sky-500/20 selection:text-sky-200">
+      {/* Top Navigation Header */}
+      <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           {/* Logo & Brand */}
           <div 
             onClick={() => { setActiveFlagId(null); setCurrentPage('dashboard'); }}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="flex items-center gap-2.5 cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-sky-600 to-indigo-600 p-0.5 shadow-lg shadow-rose-950/50 group-hover:scale-105 transition">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Shield className="w-5 h-5 text-sky-400" />
-              </div>
+            <div className="w-8 h-8 rounded bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400">
+              <Shield className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-black text-lg tracking-wider text-white">ACENTRA</span>
-                <span className="text-[11px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold">
-                  AEGIS
-                </span>
-              </div>
-              <p className="text-[10px] font-mono text-slate-400 -mt-0.5 tracking-tight">
-                Graph & Rule-Engine Fraud Platform
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm tracking-wide text-white">ACENTRA</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-semibold">
+                AEGIS
+              </span>
+              <span className="hidden md:inline text-xs text-slate-400 border-l border-slate-800 pl-2 ml-1">
+                Fraud Risk Engine
+              </span>
             </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex items-center gap-1 sm:gap-2">
+          <nav className="flex items-center gap-1">
             <button
               onClick={() => { setActiveFlagId(null); setCurrentPage('dashboard'); }}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition ${
                 currentPage === 'dashboard'
                   ? 'bg-slate-800 text-sky-400 border border-slate-700'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
-              <LayoutDashboard className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
             </button>
 
             <button
               onClick={() => { setActiveFlagId(null); setCurrentPage('flags'); }}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition ${
                 currentPage === 'flags' || currentPage === 'detail'
                   ? 'bg-slate-800 text-sky-400 border border-slate-700'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
-              <ListFilter className="w-4 h-4" />
-              <span className="hidden sm:inline">Flagged Queue</span>
+              <ListFilter className="w-3.5 h-3.5" />
+              <span>Flagged Queue</span>
             </button>
 
             <button
               onClick={() => { setActiveFlagId(null); setCurrentPage('audit'); }}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold transition ${
                 currentPage === 'audit'
                   ? 'bg-slate-800 text-sky-400 border border-slate-700'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
-              <ClipboardCheck className="w-4 h-4" />
-              <span className="hidden sm:inline">Audit Trail</span>
+              <ClipboardCheck className="w-3.5 h-3.5" />
+              <span>Audit Trail</span>
             </button>
           </nav>
 
-          {/* Environment Status Badge */}
-          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-full">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          {/* DB Connection Indicator */}
+          <div className="hidden lg:flex items-center gap-2 font-mono text-[11px] bg-slate-950 border border-slate-800 px-2.5 py-1 rounded">
+            <Server className="w-3 h-3 text-emerald-400" />
             <span className="text-slate-400">PostgreSQL:</span>
-            <span className="text-emerald-400 font-bold">Neon Serverless</span>
+            <span className="text-emerald-400 font-medium">Neon Active</span>
           </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Workspace Area */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {currentPage === 'dashboard' && (
           <Dashboard 
             onNavigateToFlag={(flagId) => {
@@ -129,11 +125,11 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-500">
+      {/* System Footer */}
+      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-2">
-          <span>Acentra Aegis Fraud Detection Platform • Multi-Layered Defense Architecture</span>
-          <span className="font-mono text-slate-600">Deterministic Rules • In-Memory NetworkX • Spatio-Temporal Haversine • Isolated SHAP</span>
+          <span>Acentra Aegis Fraud Platform v1.2</span>
+          <span className="font-mono text-slate-600">Deterministic Rules • Heterogeneous Graph • Haversine Mobility • SHAP ML</span>
         </div>
       </footer>
     </div>

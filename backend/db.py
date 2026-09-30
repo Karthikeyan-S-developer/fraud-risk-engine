@@ -16,18 +16,26 @@ db_url = RAW_DATABASE_URL
 if db_url.startswith("postgresql://"):
     db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-# Handle SSL and parameters for Neon PostgreSQL
-connect_args = {}
-if "sslmode=require" in db_url:
-    connect_args["sslmode"] = "require"
+# Handle engine args for SQLite vs PostgreSQL
+if db_url.startswith("sqlite"):
+    engine_kwargs = {
+        "connect_args": {"check_same_thread": False}
+    }
+else:
+    connect_args = {}
+    if "sslmode=require" in db_url:
+        connect_args["sslmode"] = "require"
+    engine_kwargs = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "connect_args": connect_args
+    }
 
 engine = create_engine(
     db_url,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    pool_size=10,
-    max_overflow=20,
-    connect_args=connect_args
+    **engine_kwargs
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

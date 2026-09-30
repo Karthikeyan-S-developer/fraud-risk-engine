@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 min-h-screen overflow-x-hidden;
+    @apply bg-slate-950 text-slate-100 min-h-screen overflow-x-hidden font-sans antialiased;
   }
 }
 
@@ -27,40 +27,79 @@
   background: #475569;
 }
 
-/* Glassmorphism helpers */
-.glass-panel {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-card {
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* Pulsing warning glow for high risk */
-@keyframes pulse-risk {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(244, 63, 94, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(244, 63, 94, 0.65);
-  }
-}
-
-.pulse-high-risk {
-  animation: pulse-risk 2.2s infinite ease-in-out;
-}
-
-/* Leaflet dark theme map overrides */
+/* Leaflet map container - keep tiles natural, only style controls */
 .leaflet-container {
   background-color: #0b1120 !important;
   font-family: inherit;
 }
 
-.leaflet-tile {
-  filter: brightness(0.65) invert(1) contrast(3.5) hue-rotate(200deg) saturate(0.35);
+/* DO NOT filter leaflet tiles - OSM tiles render naturally */
+/* Leaflet UI controls dark mode */
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #334155 !important;
+}
+
+.leaflet-control-attribution {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  color: #64748b !important;
+  font-size: 9px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #38bdf8 !important;
+}
+
+/* Marker popup dark mode */
+.leaflet-popup-content-wrapper {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: #1e293b !important;
+}
+
+.leaflet-popup-close-button {
+  color: #94a3b8 !important;
+}
+
+.custom-geo-marker {
+  z-index: 1000 !important;
+}
+
+/* Live stream pulse animation */
+@keyframes stream-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.stream-live-dot {
+  animation: stream-pulse 1.4s ease-in-out infinite;
+}
+
+/* Fade-in animation for new rows */
+@keyframes row-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.row-new {
+  animation: row-slide-in 0.35s ease-out;
+}
+
+/* Animate-fade-in for panels */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
 }
